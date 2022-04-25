@@ -30,6 +30,7 @@ python3 detect.py \
 import argparse
 import cv2
 import os
+import time
 
 import rospy
 import numpy as np
@@ -68,7 +69,7 @@ def main():
     inference_size = input_size(interpreter)
 
     cap = cv2.VideoCapture(args.camera_idx)
-
+    last_time = time.monotonic()
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
@@ -78,10 +79,18 @@ def main():
 
         cv2_im_rgb = cv2.cvtColor(cv2_im, cv2.COLOR_BGR2RGB)
         cv2_im_rgb = cv2.resize(cv2_im_rgb, inference_size)
+        start_time = time.monotonic()
         run_inference(interpreter, cv2_im_rgb.tobytes())
         objs = get_objects(interpreter, args.threshold)[:args.top_k]
+        stop_time = time.monotonic()
+        inference_ms = (stop_time - start_time)*1000.0
+        fps_ms = 1.0 / (stop_time - last_time)
+        annotate_text = 'Inference: {:5.2f}ms FPS: {:3.1f}'.format(inference_ms, fps_ms)
+        last_time = stop_time
         cv2_im = append_objs_to_img(cv2_im, inference_size, objs, labels)
 
+        print(annotate_text)
+        
         cv2.imshow('frame', cv2_im)
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
