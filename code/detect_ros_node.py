@@ -43,7 +43,7 @@ from pycoral.utils.edgetpu import run_inference
 # bridge = CvBridge()
 
 def main():
-    default_model_dir = '/home/starboy0402/catkin_ws/src/image_classification_topic/scripts/'
+    default_model_dir = '/home/starboy0402/catkin_ws/src/image_classification_topic/scripts/' # write your dir
     default_model = 'mobilenet_ssd_v2_coco_quant_postprocess_edgetpu.tflite'
     default_labels = 'coco_labels_only_person.txt'
     parser = argparse.ArgumentParser()
@@ -95,10 +95,9 @@ def main():
             break
         pub = rospy.Publisher('camera_chatter', Int16, queue_size=1)
         rospy.init_node('talker', anonymous=True)
-        try:
-            pub.publish(location)
-        except KeyboardInterrupt:
-            rospy.is_shutdown()
+        pub.publish(location)
+        if rospy.is_shutdown():
+            break
     cap.release()
     cv2.destroyAllWindows()
 
